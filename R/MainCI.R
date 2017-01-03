@@ -8,7 +8,8 @@ library(rbenchmark)
 library(compiler)
 library(gsubfn)
 library(tools)
-source("http://gsubfn.googlecode.com/svn/trunk/R/list.R")
+#source("http://gsubfn.googlecode.com/svn/trunk/R/list.R")
+source("https://raw.githubusercontent.com/ggrothendieck/gsubfn/master/R/list.R")
 #for C compiler
 Sys.setenv("PKG_CXXFLAGS"="-std=c++11")
 
@@ -149,10 +150,10 @@ NormjackknifeSv <- function(rT,S,Se,alpha,Sv){
 
 #standard error and varaince jacknife
 jackfun<-function(data3,pcrit,M){
-  indexing=data3@loc.nall
+  indexing=data3@loc.n.all
   N=dim(data3@tab)[1]
   Nj=N-1
-  L= length(data3@loc.names)
+  L= length(levels(data3@loc.fac))
   true=rBurrrowsS(data3@tab, N, pcrit, L, indexing,M)
   r=true[1]
   J=true[2]
@@ -164,7 +165,7 @@ jackfun<-function(data3,pcrit,M){
   for(i in 1:N){
     data4<-data3[-i]
     data5<- data4@tab[,colSums(data4@tab)!=0]
-    reIndex<- data4@loc.nall-unlist(lapply(split(colSums(data4@tab)==0, data4@loc.fac),sum))
+    reIndex<- data4@loc.n.all-unlist(lapply(split(colSums(data4@tab)==0, data4@loc.fac),sum))
     temp=rBurrrowsS( data5, Nj, pcrit, L,reIndex,0)
     JKvalues[i]=temp[1]
   }
@@ -283,7 +284,7 @@ for(y in 1:length(dirlist)){
     #main estimation loop
     for(i in 1:length(filelist2)){
       #setTkProgressBar(pb, i/10, title = NULL, label = NULL)
-      data<-read.fstat(paste(dirlist[y],"/", filelist2[i], sep=""),missing=NA,quiet=TRUE)
+      data<-read.fstat(paste(dirlist[y],"/", filelist2[i], sep=""),quiet=TRUE)
       
       #data<-read.fstat(testFile,missing=NA,quiet=TRUE)
       
