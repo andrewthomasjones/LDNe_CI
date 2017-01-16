@@ -18,9 +18,9 @@ using namespace std;
 
 // [[Rcpp::export]]
 ArrayXXi countTable(ArrayXXd data, int i, int j, int N, VectorXi loc, double pcrit) {
-  data=(data)*2;
+  //data=(data);
   int starti,startj, kj,ki;
-  
+
   starti=loc.head(i).sum();
   startj=loc.head(j).sum();
   
@@ -29,50 +29,54 @@ ArrayXXi countTable(ArrayXXd data, int i, int j, int N, VectorXi loc, double pcr
   
   ArrayXXi datai2(N,ki);
   ArrayXXi dataj2(N,kj);
-  
+
   ArrayXXi table(3,3);
   ArrayXXi bigTable(3,3*ki*kj);
   
-  datai2=data.block(0,starti,N,ki).cast<int>();
-  dataj2=data.block(0,startj,N,kj).cast<int>();
-  
+    datai2=data.block(0,starti,N,ki).cast<int>();
+    dataj2=data.block(0,startj,N,kj).cast<int>();
+
   ArrayXXd ps = datai2.colwise().sum().cast<double>()/N;
   ArrayXXd qs = dataj2.colwise().sum().cast<double>()/N;
-  
-//  cout<< N*(ps*(ps < pcrit).cast<double>()).sum() << endl;
-//  cout<< (qs < pcrit).sum()<< endl << endl;
-  
+//   
+// //  cout<< N*(ps*(ps < pcrit).cast<double>()).sum() << endl;
+// //  cout<< (qs < pcrit).sum()<< endl << endl;
+//   
   for(int i=0; i< ki;i++){
     if(ps(i)<pcrit){
       datai2.col(i).fill(0);
     }
   }
-  
   for(int i=0; i< kj;i++){
     if(qs(i)<pcrit){
       dataj2.col(i).fill(0);
     }
-  } 
-  
-  
-  
-  
-  
-  
-  int l = 0;
-  
+  }
+//   
+
+//   
+//   
+//   
+//   
+    int l = 0;
+//   
   for(int a=0;a<ki;a++){
     for(int b=0;b<kj;b++){
-      table.fill(0);
-      for(int n=0;n<N;n++){
+       table.fill(0);
+       for(int n=0;n<N;n++){
+         //Rcpp::Rcout<<  datai2.col(a)(n) <<' ' << dataj2.col(b)(n) <<' ' << std::endl;
+         
           table(datai2.col(a)(n),dataj2.col(b)(n))++;
-      }
-      
+       }
+       Rcpp::Rcout << std::endl;
+      // 
       bigTable.block(0,0+(l*3),3,3)=table;
       l++;
-      
+
     }
   }
+//   
+
   
   return bigTable;
   
@@ -204,7 +208,7 @@ ArrayXXd rShuff(ArrayXXd data, VectorXi loc){
 
 // [[Rcpp::export]]
 vector<double> mainLoop(ArrayXXd data, int N, double pcrit, int L, VectorXi loc){
-    int C, indComb,lengthAB,ki,kj, whichA, whichB;
+   int C, indComb,lengthAB,ki,kj, whichA, whichB;
    double p,q,hi,hj, Delta, DeltaAdj, rDelta, grandMean,grandMean2, ptot, qtot;
    
     C = (L*(L-1)/2); 
@@ -221,74 +225,78 @@ vector<double> mainLoop(ArrayXXd data, int N, double pcrit, int L, VectorXi loc)
     combinations = pairsCombo(L);
     indComb=indCombCount(L,loc);
     
-     
-   
-   
-    
-  
-      
-      
-      
-      for(int i =0; i<C; i++){
-        
+      // 
+      // 
+      // 
+      // 
+      // 
+      // 
+      // 
+      // 
+       for(int i =0; i<C; i++){
+      //   
         whichA = combinations(0,i);
         whichB = combinations(1,i);
-        nABList=countTable(data, whichA , whichB, N, loc, pcrit);
-  
-        kj=loc(whichB);
-        ki=loc(whichA);
         
+        //Rcpp::Rcout<<  N <<' ' <<  loc <<' ' << pcrit << std::endl;
+        //Rcpp::Rcout<<  whichA  <<' ' <<  whichB << std::endl;
         
-        lengthAB = ki*kj;
-        AlleleComb(i)=(ki-1)*(kj-1);
-        ArrayXXd rhat(1,lengthAB);
-        ArrayXXd rhat2(1,lengthAB);
-        ArrayXXd effSamp(1,lengthAB);
-        rhat.fill(0);
-        rhat2.fill(0);
-        
+      nABList=countTable(data, whichA , whichB, N, loc, pcrit);
+// //
+      kj=loc(whichB);
+      ki=loc(whichA);
+// 
+// 
+      lengthAB = ki*kj;
+      AlleleComb(i)=(ki-1)*(kj-1);
+      ArrayXXd rhat(1,lengthAB);
+      ArrayXXd rhat2(1,lengthAB);
+      ArrayXXd effSamp(1,lengthAB);
+      rhat.fill(0);
+      rhat2.fill(0);
+
         double dropped =0.0;
         int pc=0;
         int qc=0;
-        
+
         for(int a =0; a<lengthAB; a++){
-          
+
           nAB=nABList.block(0,a*3,3,3).cast<double>();
-          
-          
+
+
           p = (2*nAB.row(0).sum()+nAB.row(1).sum())/(2*N);
           q = (2*nAB.col(0).sum()+nAB.col(1).sum())/(2*N);
           hj= nAB.row(0).sum()/(N);
           hi= nAB.col(0).sum()/(N);
-          
+
           Delta = (2*nAB(0,0)+nAB(1,0)+nAB(0,1)+(nAB(1,1)/2))/(N)-(2*p*q);
           DeltaAdj = N*Delta/(N-1);
           rDelta = (DeltaAdj*DeltaAdj)/((p*(1-p)+(hj-p*p))*(q*(1-q)+(hi-q*q)));
-          
+
           if((1-p)<pcrit||(1-q)<pcrit ){
             rDelta=0.0;
             dropped++;
           }
-          
+
           if((1-p)<pcrit){
             pc++;
           }
-          
+
           if((1-q)<pcrit ){
             qc++;
           }
-          
-          
+
+
           rhat(0,a)=rDelta;
 
-     
+
         }
-        
+
           rMeans(i) = rhat.sum()/(lengthAB-dropped);
-        
+
           double part1 =0.0;
           double part2 =0.0;
-          
+
           if(pc==0){
             part1 = (ki-1);
           }else{
@@ -300,38 +308,71 @@ vector<double> mainLoop(ArrayXXd data, int N, double pcrit, int L, VectorXi loc)
             part2 = (kj-qc/ki);
           }
           actualPairs(i) = part1*part2;
-        
-        
-      }
+//           Rcpp::Rcout<<  " 4 " << std::endl;
+
+        }
+       
       vector<double> out;
 
       grandMean=((rMeans*actualPairs.cast<double>()).sum())/(actualPairs.cast<double>().sum());
       out.push_back(grandMean);
       out.push_back(actualPairs.cast<double>().sum());
-      
+
       for(int i =0; i<C; i++){
         out.push_back(rMeans(i));
       }
       return(out);
 }
+
+//N is sample size, L is num loci, loc is allele counts,
+// [[Rcpp::export]]
+vector <double> testS(ArrayXXd data, int N, double pcrit, int L, VectorXi loc, int nPerm) {
+  vector<double> output;
+  Rcpp::Rcout<< N << " " << L << " " << pcrit << " " << nPerm << " " << std::endl;
+  //cout<< loc << endl;
+  
+  
+  
+
+  Rcpp::Rcout<< "main again" << std::endl;
+  
+  //mainloop
+  vector<double> mainCalc;//= mainLoop(data, N, pcrit,  L,  loc);
+  
+  Rcpp::Rcout<< "vec alloc" << std::endl;    
+  //r
+  output.push_back(mainCalc.at(0));
+  
+  return(output);
+  
+}
+
+
 //N is sample size, L is num loci, loc is allele counts,
 // [[Rcpp::export]]
 vector <double> rBurrrowsS(ArrayXXd data, int N, double pcrit, int L, VectorXi loc, int nPerm) {
     vector<double> output;
     vector<double> perms;
+    
+   // Rcpp::Rcout<< N << " " << L << " " << pcrit << " " << nPerm << " " << std::endl;
+    //cout<< loc << endl;
+    
       
     //get sved correction
     for(int j =0; j<nPerm; j++){  
       ArrayXXd data2 = rShuff(data, loc);
+      Rcpp::Rcout<< j << " " << std::endl;
       perms.push_back(mainLoop(data2, N, pcrit,  L,  loc).at(0));
      }
        
     double sum = std::accumulate(perms.begin(), perms.end(), 0.0);
     double mean = sum / perms.size();
         
+    //Rcpp::Rcout<< "main again" << std::endl;    
     //mainloop
     vector<double> mainCalc= mainLoop(data, N, pcrit,  L,  loc);
     
+    //Rcpp::Rcout<< "vec alloc" << std::endl;    
     //r
     output.push_back(mainCalc.at(0));
     
@@ -347,5 +388,4 @@ vector <double> rBurrrowsS(ArrayXXd data, int N, double pcrit, int L, VectorXi l
     }
     return(output);
 }
-
 
