@@ -46,9 +46,9 @@ options = [
      'validator': 'replications > 0',
      },
     {'name': 'dist',
-     'default': 'Unif',
+     'default': 'unif',
      'label': 'Allele Dist.',
-     'type': ('chooseOneOf', ['Unif', 'Power', 'Empir']),
+     'type': ('chooseOneOf', ['unif', 'Power', 'Empir']),
      },
     {'name':'runID',
      'default':'runXX',
@@ -140,6 +140,7 @@ def simuGeneticDrift(pathName, popSize=100, sampSize=100, loc=20, allPerLoc = 5,
     pop = Population(size=popSize, loci=loc, ancGen = 0,  lociNames=lnames, infoFields=['ind_id', 'father_id', 'mother_id'])
     pop.dvars().fileName= pathName
     paramList = list([popSize,sampSize,loc,allPerLoc,generations,replications, dist])
+    print(paramList)
     nameList = list(['pop_size','sample_size','n_loci','al_per_loc','n_gen','n_rep', 'allele_dist'])
     paramFile = open(pathName + "/param.csv" ,'wb')
     wr = csv.writer(paramFile, quoting=csv.QUOTE_ALL)
